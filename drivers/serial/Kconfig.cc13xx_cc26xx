@@ -7,7 +7,7 @@
 
 menuconfig UART_CC13XX_CC26XX
 	bool "TI SimpleLink CC13xx / CC26xx UART driver"
-	depends on SOC_SERIES_CC13X2_CC26X2
+	depends on SOC_SERIES_CC13X0_CC26X0 || SOC_SERIES_CC13X2_CC26X2
 	select SERIAL_HAS_DRIVER
 	select SERIAL_SUPPORT_INTERRUPT
 	help

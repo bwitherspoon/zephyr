@@ -7,6 +7,6 @@
 
 config PINMUX_CC13XX_CC26XX
 	bool "TI SimpleLink CC13xx / CC26xx pinmux driver"
-	depends on SOC_SERIES_CC13X2_CC26X2
+	depends on SOC_SERIES_CC13X0_CC26X0 || SOC_SERIES_CC13X2_CC26X2
 	help
 	  Enable the TI SimpleLink CC13xx / CC26xx pinmux driver.

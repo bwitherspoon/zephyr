@@ -1,0 +1,14 @@
+# Kconfig.defconfig.cc2650 - Texas Instruments SimpleLink CC2650
+#
+# Copyright (c) 2019 Brett Witherspoon
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+if SOC_CC2650
+
+config SOC
+	string
+	default "cc2650"
+
+endif # SOC_CC2650

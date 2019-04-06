@@ -1,0 +1,16 @@
+# Kconfig.soc - Texas Instruments SimpleLink CC26x0
+#
+# Copyright (c) 2019 Brett Witherspoon
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+choice
+prompt "TI SimpleLink MCU Selection"
+depends on SOC_SERIES_CC13X0_CC26X0
+
+config SOC_CC2650
+  bool "CC2650"
+  select HAS_CC26X0_SDK
+
+endchoice

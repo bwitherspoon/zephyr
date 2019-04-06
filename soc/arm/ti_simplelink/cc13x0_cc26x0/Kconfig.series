@@ -1,0 +1,47 @@
+# Kconfig.series - Texas Instruments SimpleLink CC13x0 / CC26x0
+#
+# Copyright (c) 2019 Brett Witherspoon
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+config SOC_SERIES_CC13X0_CC26X0
+	bool "TI SimpleLink Family CC13x0 / CC26x0"
+	select CPU_CORTEX_M3
+	select CPU_CORTEX_M_HAS_SYSTICK
+	select SOC_FAMILY_TISIMPLELINK
+	help
+	  Enable support for TI SimpleLink CC13x0 / CC26x0 SoCs
+
+menuconfig CC13X0_CC26X0_BOOTLOADER_ENABLE
+	bool "ROM bootloader"
+	depends on SOC_SERIES_CC13X0_CC26X0
+	help
+	  Enable the serial bootloader which resides in ROM on CC13xx / CC26xx
+	  devices.
+
+if CC13X0_CC26X0_BOOTLOADER_ENABLE
+
+config CC13X0_CC26X0_BOOTLOADER_BACKDOOR_ENABLE
+	bool "ROM bootloader backdoor"
+	help
+	  Enable the ROM bootloader backdoor which starts the bootloader if the
+	  associated pin is at the correct logic level on reset.
+
+config CC13X0_CC26X0_BOOTLOADER_BACKDOOR_PIN
+	int "ROM bootloader backdoor pin"
+	depends on CC13X0_CC26X0_BOOTLOADER_BACKDOOR_ENABLE
+	range 0 255
+	default 255
+	help
+	  Set the pin that is level checked if the bootloader backdoor is enabled.
+
+config CC13X0_CC26X0_BOOTLOADER_BACKDOOR_LEVEL
+	int "ROM bootloader backdoor level"
+	depends on CC13X0_CC26X0_BOOTLOADER_BACKDOOR_ENABLE
+	range 0 1
+	default 0
+	help
+	  Set the active level of the pin selected for the bootloader backdoor.
+
+endif # CC13X0_CC26X0_BOOTLOADER_ENABLE
