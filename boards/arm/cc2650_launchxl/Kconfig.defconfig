@@ -1,0 +1,19 @@
+# Kconfig - TI CC2650 LaunchPad board
+#
+# Copyright (c) 2019 Brett Witherspoon
+#
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_CC2650_LAUNCHXL
+
+config BOARD
+	default "cc2650_launchxl"
+
+if SPI
+
+config SPI_0
+       default y
+
+endif # SPI
+
+endif # BOARD_CC2650_LAUNCHXL

@@ -1,0 +1,9 @@
+# Kconfig - TI CC2650 LaunchPad board
+#
+# Copyright (c) 2019 Brett Witherspoon
+#
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_CC2650_LAUNCHXL
+	bool "TI CC2650 LaunchPad"
+	depends on SOC_CC2650
