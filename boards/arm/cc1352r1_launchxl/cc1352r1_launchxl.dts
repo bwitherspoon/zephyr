@@ -67,3 +67,12 @@
 	tx-pin = <13>;
 	rx-pin = <12>;
 };
+
+&spi0 {
+	status = "ok";
+	sck-pin = <10>;
+	mosi-pin = <9>;
+	miso-pin = <8>;
+	cs-pin = <11>;
+	cs-gpios = <&gpio0 11 0>;
+};
