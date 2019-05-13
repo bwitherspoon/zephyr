@@ -88,3 +88,25 @@ already existing in ROM.
 
 After setting CONFIG_HAS_MSP432P4XXSDK=y in Kconfig, most of the
 peripheral driver library functions will be accessible from ROM.
+
+3. CC26xxWare
+
+The current version supported in Zephyr is CC26xxWare 2.24.03.17272 extracted
+from TI-RTOS 2.21.01.08, downloaded from:
+
+    http://www.ti.com/tool/TI-RTOS-MCU
+
+The driver library source is copied, as follows:
+
+  EXT_DIR=$ZEPHYR_BASE/ext/hal/ti/simplelink/source/ti/devices/cc26x0
+  pushd tirtos_cc13xx_cc26xx_2_21_01_08/products/cc26xxware_2_24_03_17272
+  find {driverlib,inc,rf_patches} -depth -name '*.[c|h]' -print0 | cpio --null -pvdm $EXT_DIR
+  find startup_files -depth -name ccfg.c -print0 | cpio --null -pvd $EXT_DIR
+  find $EXT_DIR -name '*.[c|h]' -exec dos2unix {} \;
+  popd
+
+TI provides the driver library functions burned into ROM at the factory,
+thus saving application code space.
+
+After setting CONFIG_HAS_CC26X0_SDK=y in Kconfig, most of the peripheral driver
+library functions will be accessible from ROM.
