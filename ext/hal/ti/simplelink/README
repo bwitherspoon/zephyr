@@ -105,6 +105,9 @@ The driver library source is copied, as follows:
   find $EXT_DIR -name '*.[c|h]' -exec dos2unix {} \;
   popd
 
+The source file startup_files/ccfg.c has been modified to use the appropriate
+sections when linking.
+
 TI provides the driver library functions burned into ROM at the factory,
 thus saving application code space.
 
