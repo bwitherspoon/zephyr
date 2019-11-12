@@ -1,0 +1,8 @@
+sample:
+  name: OPT3001 Light Sensor
+tests:
+  test_build:
+    harness: sensor
+    platform_whitelist: cc1352r1_launchxl cc26x2r1_launchxl
+    tags: sensors
+    depends_on: i2c
