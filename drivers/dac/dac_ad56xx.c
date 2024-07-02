@@ -4,10 +4,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#define DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(bus)                                                    \
+	(DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5628, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5648, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5668, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5672, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5674, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5676, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5679, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5684, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5686, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5687, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5689, bus) ||                                      \
+	 DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(adi_ad5697, bus))
+
 #include <stdint.h>
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
+#if DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(i2c)
+#include <zephyr/drivers/i2c.h>
+#endif
+#if DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(spi)
 #include <zephyr/drivers/spi.h>
+#endif
 #include <zephyr/drivers/dac.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/byteorder.h>
@@ -29,20 +48,42 @@ enum ad56xx_command {
 	AD56XX_CMD_SOFTWARE_RESET = 6,
 };
 
+union ad56xx_bus {
+#if DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(i2c)
+	struct i2c_dt_spec i2c;
+#endif
+#if DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(spi)
+	struct spi_dt_spec spi;
+#endif
+};
+
+typedef bool (*ad56xx_bus_is_ready_fn)(const union ad56xx_bus *bus);
+typedef int (*ad56xx_write_command_fn)(const struct device *dev, enum ad56xx_command command,
+				       uint8_t address, uint16_t value);
+
 struct ad56xx_config {
-	struct spi_dt_spec bus;
+	const union ad56xx_bus bus;
 	const struct gpio_dt_spec gpio_reset;
 	uint8_t resolution;
 
 	const uint8_t *channel_addresses;
 	size_t channel_count;
+
+	ad56xx_bus_is_ready_fn bus_is_ready;
+	ad56xx_write_command_fn write_command;
 };
 
 struct ad56xx_data {
 };
 
-static int ad56xx_write_command(const struct device *dev, enum ad56xx_command command,
-				uint8_t address, uint16_t value)
+#if DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(spi)
+static bool ad56xx_bus_is_ready_spi(const union ad56xx_bus *bus)
+{
+	return spi_is_ready_dt(&bus->spi);
+}
+
+static int ad56xx_write_command_spi(const struct device *dev, enum ad56xx_command command,
+				    uint8_t address, uint16_t value)
 {
 	const struct ad56xx_config *config = dev->config;
 	uint8_t buffer_tx[3];
@@ -78,6 +119,43 @@ static int ad56xx_write_command(const struct device *dev, enum ad56xx_command co
 	}
 
 	return 0;
+}
+#endif /* DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(spi) */
+
+#if DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(i2c)
+static bool ad56xx_bus_is_ready_i2c(const union ad56xx_bus *bus)
+{
+	return device_is_ready(bus->i2c.bus);
+}
+
+static int ad56xx_write_command_i2c(const struct device *dev, enum ad56xx_command command,
+				    uint8_t address, uint16_t value)
+{
+	const struct ad56xx_config *cfg = dev->config;
+
+	uint8_t buffer[3];
+
+	buffer[0] = (command << 4) | address;
+	value = value << (16 - cfg->resolution);
+	sys_put_be16(value, buffer + 1);
+
+	return i2c_write_dt(&cfg->bus.i2c, buffer, sizeof(buffer));
+}
+#endif /* DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(i2c) */
+
+static inline bool ad56xx_bus_is_ready(const struct device *dev)
+{
+	const struct ad56xx_config *cfg = dev->config;
+
+	return cfg->bus_is_ready(&cfg->bus);
+}
+
+static inline int ad56xx_write_command(const struct device *dev, enum ad56xx_command command,
+				uint8_t address, uint16_t value)
+{
+	const struct ad56xx_config *cfg = dev->config;
+
+	return cfg->write_command(dev, command, address, value);
 }
 
 static int ad56xx_channel_setup(const struct device *dev, const struct dac_channel_cfg *channel_cfg)
@@ -120,8 +198,8 @@ static int ad56xx_init(const struct device *dev)
 	const struct ad56xx_config *config = dev->config;
 	int result;
 
-	if (!spi_is_ready_dt(&config->bus)) {
-		LOG_ERR("SPI bus %s not ready", config->bus.bus->name);
+	if (!ad56xx_bus_is_ready(dev)) {
+		LOG_ERR("bus not ready");
 		return -ENODEV;
 	}
 
@@ -159,19 +237,43 @@ static const struct dac_driver_api ad56xx_driver_api = {
 	.write_value = ad56xx_write_value,
 };
 
+#if DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(spi)
 BUILD_ASSERT(CONFIG_DAC_AD56XX_INIT_PRIORITY > CONFIG_SPI_INIT_PRIORITY,
 	     "CONFIG_DAC_AD56XX_INIT_PRIORITY must be higher than CONFIG_SPI_INIT_PRIORITY");
+#endif /* DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(spi) */
 
-#define DAC_AD56XX_INST_DEFINE(index, name, res, channels, channels_count)                         \
-	static struct ad56xx_data data_##name##_##index;                                           \
-	static const struct ad56xx_config config_##name##_##index = {                              \
+#if DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(i2c)
+BUILD_ASSERT(CONFIG_DAC_AD56XX_INIT_PRIORITY > CONFIG_I2C_INIT_PRIORITY,
+	     "CONFIG_DAC_AD56XX_INIT_PRIORITY must be higher than CONFIG_I2C_INIT_PRIORITY");
+#endif /* DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY(i2c) */
+
+#define DAC_AD56XX_SPI(index, res, channels, channels_count) {                                     \
 		.bus = SPI_DT_SPEC_INST_GET(                                                       \
 			index, SPI_OP_MODE_MASTER | SPI_MODE_CPHA | SPI_WORD_SET(8), 0),           \
 		.resolution = res,                                                                 \
 		.gpio_reset = GPIO_DT_SPEC_INST_GET_OR(index, reset_gpios, {0}),                   \
 		.channel_addresses = channels,                                                     \
 		.channel_count = channels_count,                                                   \
-	};                                                                                         \
+		.bus_is_ready = ad56xx_bus_is_ready_spi,                                           \
+		.write_command = ad56xx_write_command_spi,                                         \
+	}
+
+#define DAC_AD56XX_I2C(index, res, channels, channels_count) {                                     \
+		.bus = {.i2c = I2C_DT_SPEC_INST_GET(index)},                                       \
+		.resolution = res,                                                                 \
+		.gpio_reset = GPIO_DT_SPEC_INST_GET_OR(index, reset_gpios, {0}),                   \
+		.channel_addresses = channels,                                                     \
+		.channel_count = channels_count,                                                   \
+		.bus_is_ready = ad56xx_bus_is_ready_i2c,                                           \
+		.write_command = ad56xx_write_command_i2c,                                         \
+	}
+
+#define DAC_AD56XX_INST_DEFINE(index, name, res, channels, channels_count)                         \
+	static struct ad56xx_data data_##name##_##index;                                           \
+	static const struct ad56xx_config config_##name##_##index =                                \
+		COND_CODE_1(DT_INST_ON_BUS(index, spi),                                            \
+			(DAC_AD56XX_SPI(index, res, channels, channels_count)),                    \
+			(DAC_AD56XX_I2C(index, res, channels, channels_count)));                   \
 	DEVICE_DT_INST_DEFINE(index, ad56xx_init, NULL, &data_##name##_##index,                    \
 			      &config_##name##_##index, POST_KERNEL,                               \
 			      CONFIG_DAC_AD56XX_INIT_PRIORITY, &ad56xx_driver_api);
@@ -326,3 +428,19 @@ DT_INST_FOREACH_STATUS_OKAY_VARGS(DAC_AD56XX_INST_DEFINE, DT_DRV_COMPAT, DAC_AD5
 				  DAC_AD5689_CHANNELS, DAC_AD5689_CHANNEL_COUNT)
 #endif
 #undef DT_DRV_COMPAT
+
+#define DT_DRV_COMPAT adi_ad5697
+#if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
+static const uint8_t ad5697_channels[] = {
+	1,
+	8,
+};
+#define DAC_AD5697_RESOLUTION    12
+#define DAC_AD5697_CHANNELS      ad5697_channels
+#define DAC_AD5697_CHANNEL_COUNT ARRAY_SIZE(ad5697_channels)
+DT_INST_FOREACH_STATUS_OKAY_VARGS(DAC_AD56XX_INST_DEFINE, DT_DRV_COMPAT, DAC_AD5697_RESOLUTION,
+				  DAC_AD5697_CHANNELS, DAC_AD5697_CHANNEL_COUNT)
+#endif
+#undef DT_DRV_COMPAT
+
+#undef DAC_AD56XX_ANY_INST_ON_BUS_STATUS_OKAY
