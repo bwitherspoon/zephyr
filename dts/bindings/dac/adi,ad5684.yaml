@@ -5,4 +5,4 @@ description: Analog Devices 12-Bit 4-channel SPI DAC
 
 compatible: "adi,ad5684"
 
-include: adi,ad56xx-base.yaml
+include: [adi,ad56xx-base.yaml, spi-device.yaml]

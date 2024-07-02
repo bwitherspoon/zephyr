@@ -97,6 +97,15 @@
 				reg = <0x4c>;
 				#io-channel-cells = < 1 >;
 			};
+
+			test_ad5697: ad5697@f {
+				status = "okay";
+				compatible = "adi,ad5697";
+				reg = <0xf>;
+				#io-channel-cells = < 1 >;
+				reset-gpios = <&test_gpio 0 0>;
+			};
+		};
 		};
 
 		test_spi: spi@33334444 {
