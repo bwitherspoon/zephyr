@@ -1,0 +1,19 @@
+identifier: mini_stm32h750
+name: WeAct Studio MiniSTM32H750 Core Board
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+ram: 512
+flash: 128
+supported:
+  - gpio
+  - counter
+  - spi
+  - backup_sram
+  - watchdog
+  - usb
+  - qspi
+vendor: weact

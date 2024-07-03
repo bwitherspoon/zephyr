@@ -1,0 +1,5 @@
+board:
+  name: mini_stm32h750
+  vendor: weact
+  socs:
+    - name: stm32h750xx
