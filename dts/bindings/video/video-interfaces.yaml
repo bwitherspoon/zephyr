@@ -18,13 +18,11 @@ properties:
 
   bus-width:
     type: int
-    maximum: 64
     description:
       Number of data lines actively used, valid for the parallel busses.
 
   data-shift:
     type: int
-    maximum: 64
     description:
       On the parallel data busses, if bus-width is used to specify the number of
       data lines, data-shift can be used to specify which data lines are used,
@@ -60,12 +58,6 @@ properties:
 
   data-lanes:
     type: int
-    minItems: 1
-    maxItems: 8
-    uniqueItems: true
-    items:
-      # Assume up to 9 physical lane indices
-      maximum: 8
     description: |
       An array of physical data lane indexes. Position of an entry determines
       the logical lane number, while the value of an entry indicates physical
@@ -77,17 +69,9 @@ properties:
 
   clock-lanes:
     type: int
-    # Assume up to 9 physical lane indices
-    maximum: 8
     description: |
       Physical clock lane index. Position of an entry determines the logical
       lane number, while the value of an entry indicates physical lane, e.g. for
       a MIPI CSI-2 bus we could have "clock-lanes = <0>;", which places the
       clock lane on hardware lane 0. This property is valid for serial busses
       only (e.g. MIPI CSI-2).
-
-  link-frequencies:
-    type: uint64-array
-    description: |
-      Allowed data bus frequencies. For MIPI CSI-2, for instance, this is the
-      actual frequency of the bus, not bits per clock per lane value.
