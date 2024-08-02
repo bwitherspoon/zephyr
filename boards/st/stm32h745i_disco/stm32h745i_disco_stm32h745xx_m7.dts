@@ -22,6 +22,7 @@
 		zephyr,flash = &flash0;
 		zephyr,flash-controller = &mt25ql512ab1;
 		zephyr,canbus = &fdcan1;
+		zephyr,display = &ltdc;
 	};
 
 	pwmleds {
@@ -31,6 +32,11 @@
 			pwms = <&pwm11 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
 			label = "User LD8 - PWM11";
 		};
+	};
+
+	lvgl_pointer {
+		compatible = "zephyr,lvgl-pointer-input";
+		input = <&ft5336>;
 	};
 
 	/* RM0455 - 23.6 External device address mapping */
@@ -87,6 +93,17 @@
 	div-p = <2>;
 	div-q = <12>;
 	div-r = <4>;
+	clocks = <&clk_hse>;
+	status = "okay";
+};
+
+/* LTDC clock configuration (9.63 MHz) */
+&pll3 {
+	div-m = <5>;
+	mul-n = <160>;
+	div-p = <2>;
+	div-q = <2>;
+	div-r = <83>;
 	clocks = <&clk_hse>;
 	status = "okay";
 };
@@ -209,6 +226,13 @@
 	status = "okay";
 	pinctrl-0 = <&i2c4_scl_pd12 &i2c4_sda_pd13>;
 	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_FAST>;
+
+	ft5336: ft5336@38 {
+		compatible = "focaltech,ft5336";
+		reg = <0x38>;
+		int-gpios = <&gpiog 2 0>;
+	};
 };
 
 &spi2 {
@@ -279,4 +303,39 @@
 			st,sdram-timing = <2 7 4 7 2 2 2>;
 		};
 	};
+};
+
+&ltdc {
+	pinctrl-0 = <&ltdc_r0_pi15 &ltdc_r1_pj0 &ltdc_r2_pj1 &ltdc_r3_ph9
+		&ltdc_r4_pj3 &ltdc_r5_pj4 &ltdc_r6_pj5 &ltdc_r7_pj6
+		&ltdc_g0_pj7 &ltdc_g1_pj8 &ltdc_g2_pj9 &ltdc_g3_pj10
+		&ltdc_g4_pj11 &ltdc_g5_pi0 &ltdc_g6_pi1 &ltdc_g7_pk2
+		&ltdc_b0_pj12 &ltdc_b1_pj13 &ltdc_b2_pj14 &ltdc_b3_pj15
+		&ltdc_b4_pk3 &ltdc_b5_pk4 &ltdc_b6_pk5 &ltdc_b7_pk6
+		&ltdc_de_pk7 &ltdc_clk_pi14 &ltdc_hsync_pi12 &ltdc_vsync_pi9>;
+	pinctrl-names = "default";
+	disp-on-gpios = <&gpiod 7 GPIO_ACTIVE_HIGH>;
+	bl-ctrl-gpios = <&gpiok 0 GPIO_ACTIVE_HIGH>;
+	ext-sdram = <&sdram2>;
+	status = "okay";
+
+	width = <480>;
+	height = <272>;
+	pixel-format = <PANEL_PIXEL_FORMAT_RGB_565>;
+	display-timings {
+		compatible = "zephyr,panel-timing";
+		de-active = <0>;
+		pixelclk-active = <0>;
+		hsync-active = <0>;
+		vsync-active = <0>;
+		hsync-len = <1>;
+		vsync-len = <10>;
+		hback-porch = <43>;
+		vback-porch = <12>;
+		hfront-porch = <8>;
+		vfront-porch = <4>;
+	};
+	def-back-color-red = <0xFF>;
+	def-back-color-green = <0xFF>;
+	def-back-color-blue = <0xFF>;
 };
