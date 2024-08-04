@@ -162,7 +162,11 @@ static int stm32_dma_init(const struct device *dev)
 
 	/*** Configure the DMA ***/
 	/* Set the parameters to be configured */
+#if defined(CONFIG_SOC_SERIES_STM32H7X)
 	hdma.Init.Request		= DMA_REQUEST_DCMI;
+#elif defined(CONFIG_SOC_SERIES_STM32F7X)
+	hdma.Init.Channel		= DMA_CHANNEL_1; //config->dma.cfg.dma_slot * DMA_CHANNEL_1;
+#endif
 	hdma.Init.Direction		= DMA_PERIPH_TO_MEMORY;
 	hdma.Init.PeriphInc		= DMA_PINC_DISABLE;
 	hdma.Init.MemInc		= DMA_MINC_ENABLE;
@@ -171,6 +175,11 @@ static int stm32_dma_init(const struct device *dev)
 	hdma.Init.Mode			= DMA_CIRCULAR;
 	hdma.Init.Priority		= DMA_PRIORITY_HIGH;
 	hdma.Init.FIFOMode		= DMA_FIFOMODE_DISABLE;
+#if defined(CONFIG_SOC_SERIES_STM32F7X)
+	hdma.Init.FIFOThreshold		= DMA_FIFO_THRESHOLD_FULL;
+	hdma.Init.MemBurst 		= DMA_MBURST_INC4;
+	hdma.Init.PeriphBurst		= DMA_PBURST_SINGLE;
+#endif
 
 	hdma.Instance = __LL_DMA_GET_STREAM_INSTANCE(config->dma.reg,
 						config->dma.channel);
