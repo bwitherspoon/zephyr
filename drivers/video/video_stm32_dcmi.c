@@ -71,7 +71,8 @@ static inline unsigned int video_pix_fmt_bpp(uint32_t pixelformat)
 
 void HAL_DCMI_ErrorCallback(DCMI_HandleTypeDef *hdcmi)
 {
-	LOG_WRN("%s", __func__);
+	LOG_WRN("%s: errorcode: 0x%x", __func__, HAL_DCMI_GetError(hdcmi));
+	k_panic();
 }
 
 void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
