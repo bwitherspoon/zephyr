@@ -130,7 +130,8 @@ static int shtcx_wakeup(const struct device *dev)
 		return -EIO;
 	}
 
-	k_sleep(K_USEC(100));
+	k_sleep(K_USEC(SHTCX_WAKE_UP_TIME_US));
+
 	return 0;
 }
 
