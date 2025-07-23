@@ -12,7 +12,7 @@
 
 #define WAKEUP_DELAY         0x30C
 #define WAKEUP_COUNTER_INDEX 6
-#define WAKEUP_BUTTON_INDEX  4
+#define WAKEUP_BUTTON_INDEX  5
 
 void z_sys_poweroff(void)
 {
@@ -27,7 +27,7 @@ void z_sys_poweroff(void)
 					   kWUU_InternalModuleInterrupt);
 #endif
 
-#if defined(CONFIG_SOC_MCXN236)
+#if defined(CONFIG_SOC_MCXN947)
 	wuu_external_wakeup_pin_config_t wakeupButtonConfig;
 
 	wakeupButtonConfig.edge = kWUU_ExternalPinFallingEdge;
